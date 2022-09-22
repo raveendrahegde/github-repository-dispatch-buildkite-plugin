@@ -44,16 +44,18 @@ do
 
     echo "${uuid}"
     response_file="${api_calls_dir}/get_actions_run_response.json"
-    # workflow_runs=$(jq .workflow_runs ${response_file})
+    workflow_runs=$(jq .workflow_runs ${response_file})
+    echo "workflow_runs - ${workflow_runs}"
     job_urls=($(jq '.workflow_runs[]| select(.event=="repository_dispatch")| .jobs_url' -r "${response_file}"| xargs))
     if [ "${job_urls+empty}" == "empty" ]
     then
+        echo "Breaking"
         break
     fi
     for job_url in "${job_urls[@]}"
     do
         if [ "${job_url}" != "" ];then
-            # echo "${job_url}"
+            echo "job_url ${job_url}"
             github_get get_job_url "${job_url}"
             html_url=$(jq --arg uuid "${uuid}" -r -c '.jobs| map(select(any(.steps[]; .name == $uuid)))[0].html_url' "${api_calls_dir}/get_job_url_response.json")
             if [ "${html_url}" != "null" ]
